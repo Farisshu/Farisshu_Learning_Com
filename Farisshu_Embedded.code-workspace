@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "01_motor_monitor"
+		},
+		{
+			"path": "02_waveform_graph"
+		},
+		{
+			"path": "03_industrial_hmi"
+		}
+	],
+	"settings": {}
+}
