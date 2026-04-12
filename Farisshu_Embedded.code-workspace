@@ -11,6 +11,10 @@
 		},
 		{
 			"path": "03_industrial_hmi"
+		},
+		{
+			"name": "99_surprise_for_her",
+			"path": "99_surprise_for_her"
 		}
 	],
 	"settings": {}
