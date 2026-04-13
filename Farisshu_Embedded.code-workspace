@@ -15,6 +15,14 @@
 		{
 			"name": "99_surprise_for_her",
 			"path": "99_surprise_for_her"
+		},
+		{
+			"name": "05_rs485_master",
+			"path": "05_rs485_master"
+		},
+		{
+			"name": "06_rs485_slave",
+			"path": "06_rs485_slave"
 		}
 	],
 	"settings": {}
