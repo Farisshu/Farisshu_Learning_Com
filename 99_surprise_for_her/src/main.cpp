@@ -3,84 +3,134 @@
 
 TFT_eSPI tft = TFT_eSPI();
 
-// 💌 Pesan untuk dia (bisa kamu edit!)
-const char* message[] = {
-  "Oh, it's hard to see you,",
-  "but I wish you were",
-  "right here...",
-  "💕 Always, Faris 💕"
+// === LAYAR LANDSCAPE ===
+#define W 160
+#define H 128
+#define CX (W/2)
+#define CY (H/2)
+
+// === FRAME CONTROL (30 FPS) ===
+#define FPS 30
+#define FRAME_MS (1000 / FPS)
+unsigned long lastFrame = 0;
+
+// === KONFIGURASI BINTANG ===
+#define NUM_STARS 50
+struct Star {
+  float x, y, z;
+  float speed;
 };
-const int lineCount = 4;
+Star stars[NUM_STARS];
 
-// 🎨 Konfigurasi Animasi
-#define HEART_X 60
-#define HEART_Y 15
-#define TEXT_START_Y 55
-#define TYPE_SPEED 80      // Kecepatan mengetik (ms per char)
-#define HEART_BEAT_MS 400  // Kecepatan denyut hati
+// === LIRIK (Love Me Not - Ravyn Lenae) ===
+const char* lyrics[] = {
+  "And, oh,",
+  "it's hard to see you,",
+  "but I wish you were",
+  "right here.",
+  "", 
+  "Oh, it's hard to leave you",
+  "when I get you",
+  "everywhere."
+};
+const int TOTAL_LINES = 8;
 
-// State
+// === STATE ===
 int currentLine = 0;
-int charIndex = 0;
-unsigned long lastCharTime = 0;
-bool heartExpanded = false;
-unsigned long lastHeartTime = 0;
-bool animationDone = false;
+unsigned long lineStart = 0;
+bool finished = false;
 
-// ❤️ Fungsi gambar hati (pixel art 11x10)
-void drawHeart(int x, int y, uint16_t color, bool expanded) {
-  int scale = expanded ? 1 : 0;
-  // Simple heart shape using drawPixel
-  for (int dy = 0; dy < 10 + scale*2; dy++) {
-    for (int dx = 0; dx < 11 + scale*2; dx++) {
-      // Pola hati sederhana (bisa diganti dengan bitmap jika mau lebih detail)
-      if ((dx >= 2-scale && dx <= 8+scale && dy >= 0 && dy <= 3+scale) ||
-          (dx >= 0-scale && dx <= 10+scale && dy >= 2+scale && dy <= 5+scale) ||
-          (dx >= 1+scale && dx <= 9+scale && dy >= 4+scale && dy <= 9+scale*2)) {
-        tft.drawPixel(x + dx, y + dy, color);
-      }
+// === WARNA ===
+#define COL_BG 0x0000      // Hitam
+#define COL_TEXT 0xFFFF    // Putih
+#define COL_STAR tft.color565(30, 50, 80) // Biru gelap redup
+
+// === INISIALISASI BINTANG ===
+void initStars() {
+  for (int i = 0; i < NUM_STARS; i++) {
+    stars[i].x = random(-W, W);
+    stars[i].y = random(-H, H);
+    stars[i].z = random(20, 400); // Kedalaman
+    stars[i].speed = random(5, 15) / 10.0; // Kecepatan pelan
+  }
+}
+
+// === RENDER BINTANG (Background) ===
+void drawStars() {
+  for (int i = 0; i < NUM_STARS; i++) {
+    stars[i].z -= stars[i].speed;
+    
+    // Reset bintang jika sudah lewat layar
+    if (stars[i].z <= 1) {
+      stars[i].x = random(-W, W);
+      stars[i].y = random(-H, H);
+      stars[i].z = 350;
+      stars[i].speed = random(5, 15) / 10.0;
+      continue;
+    }
+
+    // Proyeksi 3D ke 2D
+    float sx = (stars[i].x / stars[i].z) * CX + CX;
+    float sy = (stars[i].y / stars[i].z) * CY + CY;
+    int size = map(stars[i].z, 1, 350, 2, 1);
+    
+    // Warna berdasarkan jarak (jauh=redup, dekat=terang)
+    uint16_t color = map(stars[i].z, 1, 350, COL_TEXT, COL_STAR);
+    
+    if (sx >= 0 && sx <= W && sy >= 0 && sy <= H) {
+      tft.fillCircle(sx, sy, size, color);
     }
   }
 }
 
-// 🎨 Gradient background romantis
-void drawRomanticBackground() {
-  for (int y = 0; y < 128; y++) {
-    // Gradient: Pink → Purple → Dark Blue
-    uint8_t r = map(y, 0, 128, 255, 30);
-    uint8_t g = map(y, 0, 128, 180, 50);
-    uint8_t b = map(y, 0, 128, 200, 100);
-    tft.drawFastHLine(0, y, 160, tft.color565(r, g, b));
+// === RENDER LIRIK (Foreground) ===
+void drawLyrics() {
+  unsigned long elapsed = millis() - lineStart;
+  
+  // Hitung opasitas untuk efek Fade In/Out
+  uint8_t alpha = 0;
+  
+  if (elapsed < 300) {
+    // Fade IN (0 - 300ms)
+    alpha = map(elapsed, 0, 300, 0, 255);
+  } 
+  else if (elapsed < 2000) {
+    // Fully Visible (300ms - 2000ms)
+    alpha = 255;
+  } 
+  else if (elapsed < 2500) {
+    // Fade OUT (2000ms - 2500ms)
+    alpha = map(elapsed, 2000, 2500, 255, 0);
+  } 
+  else {
+    // Waktu habis, ganti baris
+    currentLine++;
+    lineStart = millis();
+    alpha = 0;
+    
+    if (currentLine >= TOTAL_LINES) {
+      finished = true;
+    }
   }
-}
+  
+  // Jika belum selesai, gambar teks
+  if (currentLine < TOTAL_LINES) {
+    // Clear area teks (supaya bintang di belakang tidak tertutup kotak hitam)
+    // Kita "lukis ulang" area teks dengan warna background yang sedikit transparan (simulasi)
+    // Atau lebih mudah: Clear kotak area teks dengan warna biru tua (supaya teks terbaca jelas di atas bintang)
+    tft.fillRect(10, CY - 20, W - 20, 40, tft.color565(0, 0, 15)); 
+    
+    // Buat warna teks berdasarkan alpha
+    uint8_t r = map(alpha, 0, 255, 0, 255);
+    uint8_t g = map(alpha, 0, 255, 0, 255);
+    uint8_t b = map(alpha, 0, 255, 0, 255);
+    uint16_t textColor = tft.color565(r, g, b);
 
-// ✍️ Efek mengetik per karakter
-void typeLine(const char* text, int lineNum) {
-  if (charIndex < strlen(text)) {
-    if (millis() - lastCharTime >= TYPE_SPEED) {
-      tft.setTextColor(TFT_WHITE, TFT_BLACK);
-      tft.setTextSize(1);
-      tft.setCursor(10, TEXT_START_Y + lineNum * 18);
-      
-      // Gambar teks sampai karakter ke charIndex
-      char buffer[32];
-      strncpy(buffer, text, charIndex + 1);
-      buffer[charIndex + 1] = '\0';
-      tft.print(buffer);
-      
-      charIndex++;
-      lastCharTime = millis();
-    }
-  } else {
-    // Lanjut ke baris berikutnya setelah jeda
-    if (millis() - lastCharTime >= 800) {
-      currentLine++;
-      charIndex = 0;
-      lastCharTime = millis();
-      if (currentLine >= lineCount) {
-        animationDone = true;
-      }
-    }
+    // Gambar teks
+    tft.setTextDatum(MC_DATUM);
+    tft.setTextColor(textColor, tft.color565(0, 0, 15)); // Background teks biru tua pekat
+    tft.setTextSize(1);
+    tft.drawString(lyrics[currentLine], CX, CY);
   }
 }
 
@@ -89,37 +139,46 @@ void setup() {
   
   tft.init();
   tft.setRotation(1); // Landscape
+  tft.fillScreen(COL_BG);
   
-  drawRomanticBackground();
+  initStars();
+  lineStart = millis();
+  lastFrame = millis();
   
-  // ❤️ Gambar hati awal
-  drawHeart(HEART_X, HEART_Y, TFT_RED, false);
-  
-  Serial.println("💌 Love letter animation started");
-  lastCharTime = millis();
-  lastHeartTime = millis();
+  Serial.println("▶ Starfield Lyric Mode Ready");
 }
 
 void loop() {
-  // 💓 Denyut hati (selalu jalan)
-  if (millis() - lastHeartTime >= HEART_BEAT_MS) {
-    // Clear area hati dulu (gambar kotak hitam kecil)
-    tft.fillRect(HEART_X-1, HEART_Y-1, 14, 12, tft.color565(30, 50, 100));
-    heartExpanded = !heartExpanded;
-    drawHeart(HEART_X, HEART_Y, TFT_RED, heartExpanded);
-    lastHeartTime = millis();
-  }
+  if (finished) return;
   
-  // ✍️ Animasi mengetik (hanya jika belum selesai)
-  if (!animationDone && currentLine < lineCount) {
-    typeLine(message[currentLine], currentLine);
+  // === FRAME RATE CONTROL ===
+  unsigned long now = millis();
+  if (now - lastFrame < FRAME_MS) {
+    delay(FRAME_MS - (now - lastFrame));
+    return;
   }
+  lastFrame = millis();
   
-  // 🔄 Jika selesai, bisa loop ulang atau tampilkan efek akhir
-  if (animationDone) {
-    // Opsional: Tambahkan efek bintang/konfeti kecil di sekitar teks
-    // Atau biarkan statis dengan hati tetap berdenyut
+  // === RENDER SPI BATCH (Lebih Cepat & Lancar) ===
+  tft.startWrite();
+  
+  // 1. Gambar Background (Jejak bintang)
+  // Menggunakan fillRect semi-transparan untuk efek ekor bintang (motion blur)
+  tft.fillRect(0, 0, W, H, tft.color565(0, 0, 5)); 
+  
+  // 2. Gambar Bintang Baru
+  drawStars();
+  
+  // 3. Gambar Lirik di Atas
+  drawLyrics();
+  
+  // Jika sudah selesai, gambar hati
+  if (finished) {
+    tft.fillRect(0, 0, W, H, tft.color565(0, 0, 10));
+    tft.setTextColor(COL_TEXT, tft.color565(0, 0, 10));
+    tft.setTextSize(3);
+    tft.drawString("♥", CX, CY);
   }
-  
-  delay(10); // Small delay untuk stabilitas
+
+  tft.endWrite();
 }
