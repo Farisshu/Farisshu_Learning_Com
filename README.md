@@ -1,46 +1,39 @@
-# 📦 Farisshu Embedded Portfolio
-Kumpulan proyek ESP32 + TFT ST7735 untuk persiapan magang Embedded Engineer.
+# 🛠️ Embedded Systems Learning Portfolio
+**M Faris Asroru Ghifary** | [LinkedIn](https://linkedin.com/in/farisshuid/) | m.farisasrorughifary@gmail.com  
+📍 Target: Software Design / Embedded Engineer Internship @ Horiba
 
 ---
 
-## 📂 Struktur Proyek
-| Folder | Deskripsi | Status |
-|--------|-----------|--------|
-| `01_motor_monitor/` | Simulasi RPM + progress bar + CLI serial | ✅ Stabil |
-| `02_waveform_graph/` | Real-time scrolling chart | 🚧 Development |
-| `03_industrial_hmi/` | UI industrial + alarm + dirty-flag rendering | 📋 Planned |
+## 📂 Project Index
+| No | Folder | Fokus | Status | Relevansi Horiba |
+|----|--------|-------|--------|------------------|
+| 01 | `05_rs485_master` / `06_rs485_slave` | RS485 Industrial Comms, Custom Protocol, Noise Immunity, Timeout Detection | ✅ Validated | SCADA, Process Control, Data Acquisition |
+| 02 | `07_can_bus_node` | **CAN Bus 2.0B @250kbps**, MCP2515/TJA1050, Big-Endian Payload, Physical Layer Debug | ✅ **Flagship** | Engine Test Systems, ECU Comm, Vehicle Network |
+| 03 | *(Coming Soon)* | FreeRTOS Task Isolation, Queue/Semaphore IPC, Watchdog per-Task | 🚧 In Progress | Real-Time Architecture, Deterministic Timing |
+| 04 | *(Coming Soon)* | Modbus RTU, CRC16, Register Mapping, PLC Simulation | 📅 Planned | Industrial Automation, Test Bench Integration |
 
 ---
 
-## 🔌 01 Motor Monitor
-Simulasi dashboard RPM motor dengan transisi smooth, auto-mode, dan command-line interface via Serial.
+## 🎯 Core Competencies Demonstrated
+- ✅ **Embedded C**: Modular architecture, `struct`/pointer management, non-blocking design, MISRA-friendly patterns
+- ✅ **Communication Protocols**: UART → RS485 → **CAN Bus** (Physical + Data Link layer)
+- ✅ **Hardware Debugging**: Multimeter analysis, termination matching, ground loop isolation, level shifting, power rail validation
+- ✅ **Safety & Robustness**: Timeout detection, bus-off recovery, input validation, fail-safe UI states
+- ✅ **Engineering Workflow**: Git branching, conventional commits, PlatformIO, structured documentation, PR-ready structure
 
-### ✨ Fitur
-- 🎨 Full-screen gradient UI
-- 📊 Progress bar dinamis (Hijau → Kuning → Merah)
-- 🔄 Auto-simulation (RPM berubah natural tiap 5-10 detik)
-- ⌨️ CLI Serial: `rpm <nilai>`, `auto`, `status`, `help`
-- 📦 Modular code: `display.h/cpp` + `simulator.h/cpp`
+---
 
-### 🔧 Wiring (ESP32 → ST7735)
-| TFT Pin | ESP32 |
-|---------|-------|
-| `VCC`   | `3V3` |
-| `GND`   | `GND` |
-| `SCK`   | `GPIO 18` |
-| `SDA`   | `GPIO 23` |
-| `CS`    | `GPIO 5` |
-| `DC`    | `GPIO 17` |
-| `RST`   | `GPIO 4` |
-| `BL`    | `GPIO 2` |
+## 📈 Roadmap Menuju Horiba Ready
+1. ✅ RS485 & CAN Bus Foundation
+2. 🚧 FreeRTOS Integration (Task/Queue/Semaphore)
+3. 📅 Modbus RTU & Industrial Standards
+4. 📅 Static Analysis (cppcheck/MISRA) + Unit Testing
+5. 📅 Mock Technical Interview & Portfolio Polish
 
-### 🚀 Cara Build & Upload
-1. Buka folder `01_motor_monitor` di VS Code
-2. Pastikan extension **PlatformIO IDE** terinstall
-3. Klik **Build** (`Ctrl+Alt+B`)
-4. Klik **Upload** (`Ctrl+Alt+U`)
-5. Buka **Serial Monitor** (`Ctrl+Shift+M`) → baud `115200`
-6. Ketik `auto` atau `rpm 1500`
+---
 
-### 📸 Demo
-*(Screenshot/GIF akan ditambahkan di sini)*
+> 🔧 *"Trust nothing, verify everything. Measure, don't guess."*  
+> Semua proyek didokumentasikan dengan standar engineering: wiring diagram, protocol mapping, troubleshooting table, dan referensi standar (ISO 11898, CAN CiA).
+
+**Last Updated**: April 2026  
+**License**: MIT (Educational & Portfolio Use)
