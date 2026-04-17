@@ -23,6 +23,15 @@
 		{
 			"name": "06_rs485_slave",
 			"path": "06_rs485_slave"
+		},
+		{
+			"path": "07_can_bus_node"
+		},
+		{
+			"path": "07_can_bus_node/master"
+		},
+		{
+			"path": "07_can_bus_node/slave"
 		}
 	],
 	"settings": {}
