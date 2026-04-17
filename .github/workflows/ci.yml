@@ -1,0 +1,30 @@
+name: 🧪 CI/CD Pipeline
+
+on:
+  push:
+    paths:
+      - '07_can_bus_node/**'  # Hanya jalan jika folder ini diubah
+  pull_request:
+    paths:
+      - '07_can_bus_node/**'
+
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest  # ✅ Linux server (No Windows path issues!)
+    
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v3
+
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: 🔧 Install PlatformIO
+      run: pip install platformio
+
+    - name: 🧪 Run Unit Tests
+      run: |
+        cd 07_can_bus_node/test
+        pio test -e native -v  # Verbose output
