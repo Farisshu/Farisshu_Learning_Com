@@ -20,7 +20,7 @@
 #include "esp_task_wdt.h"
 
 /* Include global configuration */
-#include "../../include/config.h"
+#include "config.h"
 
 /* Local module headers */
 #include "ui_display.h"
@@ -34,7 +34,7 @@
 #define RS485_SLAVE_TX_PIN        17
 #define LINK_TIMEOUT_MS           5000
 #define UI_UPDATE_INTERVAL_MS     400
-#define WATCHDOG_TIMEOUT_S        8
+#define WATCHDOG_TIMEOUT_S        10
 
 /**
  * @brief Tag for logging

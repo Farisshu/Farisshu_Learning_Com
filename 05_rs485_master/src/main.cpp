@@ -102,7 +102,7 @@ int rs485Master_formatPacket(const SensorData_t* data, char* buffer, size_t buff
     CHECK_NULL(data, -1);
     CHECK_NULL(buffer, -1);
 
-    if (bufferSize < 50) {
+    if (bufferSize < 64) {
         LOG_ERROR(TAG, "Buffer too small: %d", bufferSize);
         return -1;
     }

@@ -13,6 +13,7 @@
 #define RS485_PARSER_H
 
 #include <Arduino.h>
+#include "config.h"
 
 #ifdef __cplusplus
 extern "C" {

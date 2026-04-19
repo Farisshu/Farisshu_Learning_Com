@@ -6,7 +6,7 @@
  */
 
 #include "ui.h"
-#include "../../include/config.h"
+#include "config.h"
 
 // ============================================================================
 // PRIVATE CONSTANTS

@@ -14,6 +14,7 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "../../include/config.h"
 
 /**
  * @brief Sensor data structure

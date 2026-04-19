@@ -13,6 +13,7 @@
 #define UI_DISPLAY_H
 
 #include <TFT_eSPI.h>
+#include "config.h"
 
 #ifdef __cplusplus
 extern "C" {
