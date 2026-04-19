@@ -1,9 +1,0 @@
-#ifndef UI_DISPLAY_H
-#define UI_DISPLAY_H
-#include <TFT_eSPI.h>
-#include "can_handler.h"
-
-void ui_init();
-void ui_render(const CanData_t* data, bool linkOk);
-void ui_drawStaticLayout();
-#endif

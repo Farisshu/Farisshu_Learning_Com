@@ -1,43 +1,65 @@
+/**
+ * @file main.cpp
+ * @brief CAN Bus Slave Node - Receives and monitors sensor data using FreeRTOS
+ * @version 1.0
+ * @date 2024
+ * 
+ * This module implements a CAN bus slave node that receives sensor data
+ * from the master node and monitors for link loss conditions.
+ * Uses FreeRTOS tasks and queues for real-time operation.
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 #include <Arduino.h>
 #include <SPI.h>
 #include <mcp_can.h>
 
-// FreeRTOS Headers
+/* === FreeRTOS Headers === */
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/queue.h>
 
-// --- Configuration Constants (Magic Numbers Removal) ---
-#define CAN_CS_PIN          22
-#define CAN_BAUDRATE        CAN_250KBPS
-#define CAN_OSC_FREQ        MCP_8MHZ
-#define CAN_MSG_ID          0x100UL
-#define QUEUE_SIZE          5
-#define TIMEOUT_MS          3000UL
+/* === Configuration Constants === */
+#define CAN_CS_PIN          22                  /**< Chip Select pin for MCP2515 */
+#define CAN_BAUDRATE        CAN_250KBPS         /**< CAN bus baudrate */
+#define CAN_OSC_FREQ        MCP_8MHZ            /**< CAN oscillator frequency */
+#define CAN_MSG_ID          0x100UL             /**< Expected CAN message ID */
+#define QUEUE_SIZE          5                   /**< Queue capacity */
+#define TIMEOUT_MS          3000UL              /**< Link loss timeout (ms) */
+#define TASK_STACK_SIZE     4096                /**< Task stack size in words */
+#define TASK_PRIORITY_RX    2                   /**< CAN RX task priority */
+#define TASK_PRIORITY_MON   1                   /**< Monitor task priority */
 
-// --- Hardware Instance ---
-MCP_CAN CAN(CAN_CS_PIN);
+/* === Hardware Instance === */
+static MCP_CAN CAN(CAN_CS_PIN);                 /**< MCP2515 CAN controller */
 
-// --- Data Structure ---
+/* === Data Structures === */
+/**
+ * @brief CAN data packet structure
+ */
 typedef struct {
-    uint16_t rpm_raw;
-    uint16_t temp_raw;
-    uint8_t  status;
-    uint32_t timestamp; // Gunakan timestamp daripada flag boolean untuk presisi
+    uint16_t rpmRaw;        /**< RPM value (scaled x10) */
+    uint16_t tempRaw;       /**< Temperature value (scaled x10) */
+    uint8_t  status;        /**< System status flags */
+    uint32_t timestamp;     /**< Reception timestamp in ms */
 } CanDataPacket_t;
 
-// --- Global Handles (Static untuk membatasi scope) ---
-static QueueHandle_t qCanData = NULL;
+/* === Global Handles === */
+static QueueHandle_t qCanData = NULL;           /**< Queue for CAN data */
 
-// ---------------------------------------------------------
-// TASK 1: CAN RECEIVER (Priority High)
-// ---------------------------------------------------------
-static void task_can_rx(void *pvParameters) {
-    (void)pvParameters; // ✅ Supress "unused parameter" warning
+/**
+ * @brief Task: CAN Receiver (High Priority)
+ * 
+ * Continuously monitors CAN bus for incoming messages and forwards
+ * valid data to the monitor task via queue.
+ */
+static void taskCanRx(void *pvParameters) {
+    (void)pvParameters;                         /**< Suppress unused parameter warning */
 
     Serial.println("[RX] Initializing CAN Controller...");
     
-    // Loop sampai hardware siap
+    /* Initialize CAN with retry loop */
     while (CAN.begin(MCP_STDEXT, CAN_BAUDRATE, CAN_OSC_FREQ) != CAN_OK) {
         Serial.println("[RX] ❌ Init Failed. Retrying in 1s...");
         vTaskDelay(pdMS_TO_TICKS(1000));
@@ -55,88 +77,92 @@ static void task_can_rx(void *pvParameters) {
 
             if (CAN.readMsgBuf(&canId, &len, buf) == CAN_OK) {
                 if (canId == CAN_MSG_ID && len >= 5) {
-                    // ✅ Explicit Casting untuk keamanan tipe data
-                    packet.rpm_raw  = (uint16_t)((buf[0] << 8) | buf[1]);
-                    packet.temp_raw = (uint16_t)((buf[2] << 8) | buf[3]);
-                    packet.status   = buf[4];
+                    /* Extract data (Big-Endian format) */
+                    packet.rpmRaw = (uint16_t)((buf[0] << 8) | buf[1]);
+                    packet.tempRaw = (uint16_t)((buf[2] << 8) | buf[3]);
+                    packet.status = buf[4];
                     packet.timestamp = millis();
 
-                    // ✅ Kirim ke Queue. Jika penuh, tunggu maksimal 10 tick
+                    /* Send to queue with timeout */
                     if (xQueueSend(qCanData, &packet, pdMS_TO_TICKS(10)) != pdPASS) {
                         Serial.println("[RX] ⚠️ Queue Full! Data dropped.");
                     }
                 }
             }
         }
-        // Yield CPU ke task lain
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(10));          /**< Yield CPU to other tasks */
     }
 }
 
-// ---------------------------------------------------------
-// TASK 2: MONITOR & LOGIC (Priority Normal)
-// ---------------------------------------------------------
-static void task_monitor(void *pvParameters) {
+/**
+ * @brief Task: Data Monitor (Normal Priority)
+ * 
+ * Receives CAN data from queue, converts to physical values,
+ * and detects link loss conditions.
+ */
+static void taskMonitor(void *pvParameters) {
     (void)pvParameters;
     
     CanDataPacket_t data;
-    uint32_t last_valid_timestamp = 0;
+    uint32_t lastValidTimestamp = 0;
 
     for (;;) {
-        // ✅ Blocking Receive: Task akan "tidur" efisien sampai data ada
-        // Timeout 500ms untuk cek Link Loss
+        /* Blocking receive with timeout for link loss detection */
         if (xQueueReceive(qCanData, &data, pdMS_TO_TICKS(500)) == pdPASS) {
-            last_valid_timestamp = data.timestamp;
+            lastValidTimestamp = data.timestamp;
             
-            // Floating point calculation (disengaja di sini agar Task RX ringan)
-            float rpm  = (float)data.rpm_raw / 10.0f;
-            float temp = (float)data.temp_raw / 10.0f;
+            /* Convert raw values to physical units */
+            const float rpm = (float)data.rpmRaw / 10.0f;
+            const float temp = (float)data.tempRaw / 10.0f;
 
-            Serial.printf("[MON] 🚗 RPM: %6.1f | TEMP: %5.1f C | STAT: 0x%02X\n", 
+            Serial.printf("[MON] 🚗 RPM: %6.1f | TEMP: %5.1f°C | STAT: 0x%02X\n", 
                           rpm, temp, data.status);
         } else {
-            // ✅ Timeout Detection Logic
-            if ((millis() - last_valid_timestamp) > TIMEOUT_MS && last_valid_timestamp != 0) {
+            /* Timeout - check for link loss */
+            if ((millis() - lastValidTimestamp) > TIMEOUT_MS && lastValidTimestamp != 0) {
                 Serial.println("[MON] ⚠️ LINK LOST! No data > 3s.");
-                last_valid_timestamp = 0; // Reset agar log tidak spam
+                lastValidTimestamp = 0;         /**< Reset to prevent spam */
             }
         }
     }
 }
 
-// ---------------------------------------------------------
-// SETUP
-// ---------------------------------------------------------
+/**
+ * @brief Initialize system and create FreeRTOS tasks
+ */
 void setup() {
     Serial.begin(115200);
-    delay(1000); // Stabilisasi Serial
+    delay(1000);                                /**< Stabilize serial port */
+    
     Serial.println("\n=================================");
-    Serial.println("🏁 FREE_RTOS CAN BUS (Static Analysis Clean)");
+    Serial.println("🏁 FREE_RTOS CAN BUS SLAVE");
     Serial.println("=================================");
 
-    // ✅ Buat Queue
+    /* Create data queue */
     qCanData = xQueueCreate(QUEUE_SIZE, sizeof(CanDataPacket_t));
     
     if (qCanData == NULL) {
         Serial.println("[ERR] Fatal: Queue creation failed! Halting.");
-        while(1); // Stop eksekusi jika resource gagal
+        while (1);                              /**< Halt on critical failure */
     }
 
-    // ✅ Create Tasks
-    // Priority: RX=2 (Penting), Monitor=1 (Standar)
-    if (xTaskCreate(task_can_rx, "CAN_RX", 4096, NULL, 2, NULL) != pdPASS) {
+    /* Create CAN RX Task */
+    if (xTaskCreate(taskCanRx, "CAN_RX", TASK_STACK_SIZE, NULL, TASK_PRIORITY_RX, NULL) != pdPASS) {
         Serial.println("[ERR] Failed to create RX Task");
     }
 
-    if (xTaskCreate(task_monitor, "Monitor", 4096, NULL, 1, NULL) != pdPASS) {
+    /* Create Monitor Task */
+    if (xTaskCreate(taskMonitor, "Monitor", TASK_STACK_SIZE, NULL, TASK_PRIORITY_MON, NULL) != pdPASS) {
         Serial.println("[ERR] Failed to create Monitor Task");
     }
     
     Serial.println("[SYS] ✅ Scheduler Started.");
 }
 
+/**
+ * @brief Main loop - Idle (all work done in tasks)
+ */
 void loop() {
-    // Loop utama kosong.
-    // Kita bisa pakai ini untuk Update Watchdog Timer (WDT) jika diaktifkan
+    /* Main loop idle - can be used for WDT feeding if needed */
     vTaskDelay(pdMS_TO_TICKS(1000));
 }

@@ -1,40 +1,43 @@
 ```
-# Build artifacts and outputs
-tools/report_generator/output/
+# PlatformIO build artifacts
+.piolibdeps/
+.platformio/
 
-# Dependencies and caches
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+# Build outputs
+.build/
+build/
 
-# Logs and temporary files
-*.log
+# Temporary files
 *.tmp
-*.swp
+*.bak
 
-# Environment files
-.env
-.env.local
-*.env.*
-
-# Editors and IDEs
+# IDE specific
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# OS generated files
+# OS specific
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log
 
 # Coverage reports
 coverage/
 htmlcov/
-.coverage
+*.coverage
 
-# Distribution artifacts
-dist/
-build/
-*.egg-info/
+# Python related (if any Python in project)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.ENV
+.env
+.env.*
+.venv/
 ```

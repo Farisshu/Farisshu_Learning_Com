@@ -1,184 +1,224 @@
+/**
+ * @file main.cpp
+ * @brief Starfield Lyric Animation Display
+ * @version 1.0
+ * @date 2024
+ * 
+ * This module displays animated starfield background with song lyrics
+ * from "Love Me Not" by Ravyn Lenae on a TFT display.
+ * Features 3D star projection and smooth fade effects.
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 #include <Arduino.h>
 #include <TFT_eSPI.h>
 
-TFT_eSPI tft = TFT_eSPI();
+/* === Display Configuration (Landscape) === */
+#define DISPLAY_WIDTH       160                 /**< Display width in pixels */
+#define DISPLAY_HEIGHT      128                 /**< Display height in pixels */
+#define CENTER_X            (DISPLAY_WIDTH / 2) /**< Center X coordinate */
+#define CENTER_Y            (DISPLAY_HEIGHT / 2)/**< Center Y coordinate */
 
-// === LAYAR LANDSCAPE ===
-#define W 160
-#define H 128
-#define CX (W/2)
-#define CY (H/2)
+/* === Frame Rate Control (30 FPS) === */
+#define TARGET_FPS          30                  /**< Target frames per second */
+#define FRAME_TIME_MS       (1000 / TARGET_FPS) /**< Frame duration in ms */
 
-// === FRAME CONTROL (30 FPS) ===
-#define FPS 30
-#define FRAME_MS (1000 / FPS)
-unsigned long lastFrame = 0;
+/* === Starfield Configuration === */
+#define NUM_STARS           50                  /**< Number of stars */
+#define STAR_Z_MIN          1                   /**< Minimum depth */
+#define STAR_Z_MAX          350                 /**< Maximum depth */
+#define STAR_SPEED_MIN      0.5f                /**< Minimum star speed */
+#define STAR_SPEED_MAX      1.5f                /**< Maximum star speed */
 
-// === KONFIGURASI BINTANG ===
-#define NUM_STARS 50
-struct Star {
-  float x, y, z;
-  float speed;
+/* === Lyric Timing === */
+#define FADE_IN_MS          300                 /**< Fade in duration */
+#define LYRIC_DISPLAY_MS    2000                /**< Full visibility duration */
+#define FADE_OUT_MS         500                 /**< Fade out duration */
+#define LINE_TOTAL_MS       (FADE_IN_MS + LYRIC_DISPLAY_MS + FADE_OUT_MS)
+
+/* === Color Definitions === */
+#define COLOR_BG            0x0000              /**< Black background */
+#define COLOR_TEXT          0xFFFF              /**< White text */
+#define COLOR_STAR_DIM      0x0A50              /**< Dark blue for distant stars */
+#define COLOR_TEXT_BG       0x000F              /**< Dark blue for text background */
+
+/* === Hardware Instance === */
+static TFT_eSPI tft = TFT_eSPI();               /**< TFT display instance */
+
+/* === Star Structure === */
+typedef struct {
+    float x;                                    /**< X position (-width to width) */
+    float y;                                    /**< Y position (-height to height) */
+    float z;                                    /**< Depth (Z-axis) */
+    float speed;                                /**< Movement speed */
+} Star_t;
+
+/* === Global State === */
+static Star_t stars[NUM_STARS];                 /**< Star array */
+static int currentLineIndex = 0;                /**< Current lyric line index */
+static unsigned long lineStartTime = 0;         /**< Start time of current line */
+static bool animationFinished = false;          /**< Animation completion flag */
+static unsigned long lastFrameTime = 0;         /**< Last frame timestamp */
+
+/* === Song Lyrics (Love Me Not - Ravyn Lenae) === */
+static const char* lyrics[] = {
+    "And, oh,",
+    "it's hard to see you,",
+    "but I wish you were",
+    "right here.",
+    "", 
+    "Oh, it's hard to leave you",
+    "when I get you",
+    "everywhere."
 };
-Star stars[NUM_STARS];
+static const int TOTAL_LYRIC_LINES = 8;         /**< Total number of lyric lines */
 
-// === LIRIK (Love Me Not - Ravyn Lenae) ===
-const char* lyrics[] = {
-  "And, oh,",
-  "it's hard to see you,",
-  "but I wish you were",
-  "right here.",
-  "", 
-  "Oh, it's hard to leave you",
-  "when I get you",
-  "everywhere."
-};
-const int TOTAL_LINES = 8;
-
-// === STATE ===
-int currentLine = 0;
-unsigned long lineStart = 0;
-bool finished = false;
-
-// === WARNA ===
-#define COL_BG 0x0000      // Hitam
-#define COL_TEXT 0xFFFF    // Putih
-#define COL_STAR tft.color565(30, 50, 80) // Biru gelap redup
-
-// === INISIALISASI BINTANG ===
-void initStars() {
-  for (int i = 0; i < NUM_STARS; i++) {
-    stars[i].x = random(-W, W);
-    stars[i].y = random(-H, H);
-    stars[i].z = random(20, 400); // Kedalaman
-    stars[i].speed = random(5, 15) / 10.0; // Kecepatan pelan
-  }
+/**
+ * @brief Initialize stars with random positions and speeds
+ */
+static void initStars(void) {
+    for (int i = 0; i < NUM_STARS; i++) {
+        stars[i].x = random(-DISPLAY_WIDTH, DISPLAY_WIDTH);
+        stars[i].y = random(-DISPLAY_HEIGHT, DISPLAY_HEIGHT);
+        stars[i].z = random(STAR_Z_MIN + 19, STAR_Z_MAX);
+        stars[i].speed = map(random(5, 15), 5, 15, STAR_SPEED_MIN, STAR_SPEED_MAX);
+    }
 }
 
-// === RENDER BINTANG (Background) ===
-void drawStars() {
-  for (int i = 0; i < NUM_STARS; i++) {
-    stars[i].z -= stars[i].speed;
-    
-    // Reset bintang jika sudah lewat layar
-    if (stars[i].z <= 1) {
-      stars[i].x = random(-W, W);
-      stars[i].y = random(-H, H);
-      stars[i].z = 350;
-      stars[i].speed = random(5, 15) / 10.0;
-      continue;
-    }
+/**
+ * @brief Draw starfield background with 3D projection effect
+ */
+static void drawStarfield(void) {
+    for (int i = 0; i < NUM_STARS; i++) {
+        /* Move star toward viewer */
+        stars[i].z -= stars[i].speed;
+        
+        /* Reset star if it passes the screen */
+        if (stars[i].z <= STAR_Z_MIN) {
+            stars[i].x = random(-DISPLAY_WIDTH, DISPLAY_WIDTH);
+            stars[i].y = random(-DISPLAY_HEIGHT, DISPLAY_HEIGHT);
+            stars[i].z = STAR_Z_MAX;
+            stars[i].speed = map(random(5, 15), 5, 15, STAR_SPEED_MIN, STAR_SPEED_MAX);
+            continue;
+        }
 
-    // Proyeksi 3D ke 2D
-    float sx = (stars[i].x / stars[i].z) * CX + CX;
-    float sy = (stars[i].y / stars[i].z) * CY + CY;
-    int size = map(stars[i].z, 1, 350, 2, 1);
-    
-    // Warna berdasarkan jarak (jauh=redup, dekat=terang)
-    uint16_t color = map(stars[i].z, 1, 350, COL_TEXT, COL_STAR);
-    
-    if (sx >= 0 && sx <= W && sy >= 0 && sy <= H) {
-      tft.fillCircle(sx, sy, size, color);
+        /* Project 3D coordinates to 2D screen */
+        const float screenX = (stars[i].x / stars[i].z) * CENTER_X + CENTER_X;
+        const float screenY = (stars[i].y / stars[i].z) * CENTER_Y + CENTER_Y;
+        const int starSize = map(stars[i].z, STAR_Z_MIN, STAR_Z_MAX, 2, 1);
+        
+        /* Calculate brightness based on distance */
+        const uint16_t starColor = map(stars[i].z, STAR_Z_MIN, STAR_Z_MAX, COLOR_TEXT, COLOR_STAR_DIM);
+        
+        /* Draw star if within screen bounds */
+        if (screenX >= 0 && screenX <= DISPLAY_WIDTH && screenY >= 0 && screenY <= DISPLAY_HEIGHT) {
+            tft.fillCircle(screenX, screenY, starSize, starColor);
+        }
     }
-  }
 }
 
-// === RENDER LIRIK (Foreground) ===
-void drawLyrics() {
-  unsigned long elapsed = millis() - lineStart;
-  
-  // Hitung opasitas untuk efek Fade In/Out
-  uint8_t alpha = 0;
-  
-  if (elapsed < 300) {
-    // Fade IN (0 - 300ms)
-    alpha = map(elapsed, 0, 300, 0, 255);
-  } 
-  else if (elapsed < 2000) {
-    // Fully Visible (300ms - 2000ms)
-    alpha = 255;
-  } 
-  else if (elapsed < 2500) {
-    // Fade OUT (2000ms - 2500ms)
-    alpha = map(elapsed, 2000, 2500, 255, 0);
-  } 
-  else {
-    // Waktu habis, ganti baris
-    currentLine++;
-    lineStart = millis();
-    alpha = 0;
+/**
+ * @brief Draw current lyric line with fade in/out effect
+ */
+static void drawLyrics(void) {
+    const unsigned long elapsed = millis() - lineStartTime;
+    uint8_t alpha = 0;
     
-    if (currentLine >= TOTAL_LINES) {
-      finished = true;
+    /* Calculate alpha based on timing phase */
+    if (elapsed < FADE_IN_MS) {
+        /* Fade IN phase */
+        alpha = map(elapsed, 0, FADE_IN_MS, 0, 255);
+    } else if (elapsed < (FADE_IN_MS + LYRIC_DISPLAY_MS)) {
+        /* Fully visible phase */
+        alpha = 255;
+    } else if (elapsed < LINE_TOTAL_MS) {
+        /* Fade OUT phase */
+        alpha = map(elapsed, FADE_IN_MS + LYRIC_DISPLAY_MS, LINE_TOTAL_MS, 255, 0);
+    } else {
+        /* Time to advance to next line */
+        currentLineIndex++;
+        lineStartTime = millis();
+        alpha = 0;
+        
+        if (currentLineIndex >= TOTAL_LYRIC_LINES) {
+            animationFinished = true;
+        }
     }
-  }
-  
-  // Jika belum selesai, gambar teks
-  if (currentLine < TOTAL_LINES) {
-    // Clear area teks (supaya bintang di belakang tidak tertutup kotak hitam)
-    // Kita "lukis ulang" area teks dengan warna background yang sedikit transparan (simulasi)
-    // Atau lebih mudah: Clear kotak area teks dengan warna biru tua (supaya teks terbaca jelas di atas bintang)
-    tft.fillRect(10, CY - 20, W - 20, 40, tft.color565(0, 0, 15)); 
     
-    // Buat warna teks berdasarkan alpha
-    uint8_t r = map(alpha, 0, 255, 0, 255);
-    uint8_t g = map(alpha, 0, 255, 0, 255);
-    uint8_t b = map(alpha, 0, 255, 0, 255);
-    uint16_t textColor = tft.color565(r, g, b);
+    /* Draw lyrics if animation not finished */
+    if (currentLineIndex < TOTAL_LYRIC_LINES) {
+        /* Clear text area with semi-transparent background */
+        tft.fillRect(10, CENTER_Y - 20, DISPLAY_WIDTH - 20, 40, COLOR_TEXT_BG);
+        
+        /* Calculate RGB color with alpha blending */
+        const uint8_t intensity = alpha;
+        const uint16_t textColor = tft.color565(intensity, intensity, intensity);
 
-    // Gambar teks
-    tft.setTextDatum(MC_DATUM);
-    tft.setTextColor(textColor, tft.color565(0, 0, 15)); // Background teks biru tua pekat
-    tft.setTextSize(1);
-    tft.drawString(lyrics[currentLine], CX, CY);
-  }
+        /* Draw centered text */
+        tft.setTextDatum(MC_DATUM);
+        tft.setTextColor(textColor, COLOR_TEXT_BG);
+        tft.setTextSize(1);
+        tft.drawString(lyrics[currentLineIndex], CENTER_X, CENTER_Y);
+    }
 }
 
+/**
+ * @brief Initialize display and start animation
+ */
 void setup() {
-  Serial.begin(115200);
-  
-  tft.init();
-  tft.setRotation(1); // Landscape
-  tft.fillScreen(COL_BG);
-  
-  initStars();
-  lineStart = millis();
-  lastFrame = millis();
-  
-  Serial.println("▶ Starfield Lyric Mode Ready");
+    Serial.begin(115200);
+    
+    /* Initialize TFT display */
+    tft.init();
+    tft.setRotation(1);                       /**< Landscape orientation */
+    tft.fillScreen(COLOR_BG);
+    
+    /* Initialize animation state */
+    initStars();
+    lineStartTime = millis();
+    lastFrameTime = millis();
+    
+    Serial.println("▶ Starfield Lyric Mode Ready");
 }
 
+/**
+ * @brief Main animation loop with frame rate control
+ */
 void loop() {
-  if (finished) return;
-  
-  // === FRAME RATE CONTROL ===
-  unsigned long now = millis();
-  if (now - lastFrame < FRAME_MS) {
-    delay(FRAME_MS - (now - lastFrame));
-    return;
-  }
-  lastFrame = millis();
-  
-  // === RENDER SPI BATCH (Lebih Cepat & Lancar) ===
-  tft.startWrite();
-  
-  // 1. Gambar Background (Jejak bintang)
-  // Menggunakan fillRect semi-transparan untuk efek ekor bintang (motion blur)
-  tft.fillRect(0, 0, W, H, tft.color565(0, 0, 5)); 
-  
-  // 2. Gambar Bintang Baru
-  drawStars();
-  
-  // 3. Gambar Lirik di Atas
-  drawLyrics();
-  
-  // Jika sudah selesai, gambar hati
-  if (finished) {
-    tft.fillRect(0, 0, W, H, tft.color565(0, 0, 10));
-    tft.setTextColor(COL_TEXT, tft.color565(0, 0, 10));
-    tft.setTextSize(3);
-    tft.drawString("♥", CX, CY);
-  }
+    if (animationFinished) {
+        return;                               /**< Stop animation when done */
+    }
+    
+    /* Frame rate control */
+    const unsigned long currentTime = millis();
+    const unsigned long frameDelta = currentTime - lastFrameTime;
+    
+    if (frameDelta < FRAME_TIME_MS) {
+        delay(FRAME_TIME_MS - frameDelta);
+        return;
+    }
+    lastFrameTime = currentTime;
+    
+    /* Render complete frame using SPI batch operations */
+    tft.startWrite();
+    
+    /* Step 1: Draw trailing effect for motion blur */
+    tft.fillRect(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, tft.color565(0, 0, 5));
+    
+    /* Step 2: Draw starfield */
+    drawStarfield();
+    
+    /* Step 3: Draw lyrics on top */
+    drawLyrics();
+    
+    /* Draw final heart if animation complete */
+    if (animationFinished) {
+        tft.fillRect(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, tft.color565(0, 0, 10));
+        tft.setTextColor(COLOR_TEXT, tft.color565(0, 0, 10));
+        tft.setTextSize(3);
+        tft.drawString("♥", CENTER_X, CENTER_Y);
+    }
 
-  tft.endWrite();
+    tft.endWrite();
 }
