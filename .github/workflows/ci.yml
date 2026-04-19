@@ -25,10 +25,10 @@ jobs:
           - 99_surprise_for_her
     
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v4
     
     - name: Set up Python
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v5
       with:
         python-version: '3.x'
     
@@ -43,14 +43,23 @@ jobs:
     - name: Setup include directory
       run: |
         mkdir -p ${{ matrix.project }}/include
-        cp -r include/* ${{ matrix.project }}/include/ 2>/dev/null || true
+        if [ -d "include" ]; then
+          cp -r include/* ${{ matrix.project }}/include/ 2>/dev/null || true
+        fi
     
     - name: Static Analysis (cppcheck)
       run: |
         cd ${{ matrix.project }}
-        cppcheck --enable=all --std=c++11 --platform=unix64 \
-          --error-exitcode=1 \
-          src/*.cpp 2>&1 | grep -E "(error|warning)" || true
+        if [ -d "src" ]; then
+          cppcheck --enable=all --std=c++11 --platform=unix64 \
+            --error-exitcode=1 \
+            src/*.cpp 2>&1 | tee /tmp/cppcheck.log || true
+          if grep -q "error:" /tmp/cppcheck.log; then
+            echo "::warning::cppcheck found errors in ${{ matrix.project }}"
+          fi
+        else
+          echo "::warning::No src directory found in ${{ matrix.project }}"
+        fi
     
     - name: Build Project
       run: |
@@ -58,7 +67,7 @@ jobs:
         pio run
     
     - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v4
       if: success()
       with:
         name: ${{ matrix.project }}-firmware
@@ -68,18 +77,29 @@ jobs:
   code-quality:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v4
     
     - name: Install cppcheck
       run: sudo apt-get update && sudo apt-get install -y cppcheck
     
     - name: Check all projects
       run: |
+        failed=0
         for dir in 01_motor_monitor 02_waveform_graph 03_industrial_hmi \
                    05_rs485_master 06_rs485_slave \
                    can_bus_master can_bus_slave \
                    990_ESP32_SPI_MASTER_SLAVE 99_surprise_for_her; do
           echo "Checking $dir..."
-          cppcheck --enable=warning --std=c++11 \
-            "$dir"/src/*.cpp 2>&1 | grep -E "error" && exit 1 || true
+          if [ -d "$dir/src" ]; then
+            if cppcheck --enable=warning --std=c++11 \
+                "$dir"/src/*.cpp 2>&1 | grep -q "error:"; then
+              echo "::error::cppcheck found errors in $dir"
+              failed=1
+            fi
+          else
+            echo "::warning::No src directory found in $dir"
+          fi
         done
+        if [ $failed -eq 1 ]; then
+          exit 1
+        fi
