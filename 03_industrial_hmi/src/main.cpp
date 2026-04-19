@@ -7,9 +7,11 @@
  */
 
 #include <Arduino.h>
-#include "../../include/config.h"
 #include "ui.h"
 #include "logic.h"
+
+/* Include global configuration */
+#include "../../include/config.h"
 
 // ============================================================================
 // PRIVATE CONSTANTS
@@ -42,13 +44,22 @@ void setup(void) {
     
     LOG_INFO("MAIN", "Industrial HMI starting...");
     
-    // Initialize modules
-    if (initUI() != STATUS_OK) {
-        LOG_ERROR("MAIN", "UI initialization failed!");
+    // Initialize modules with error handling
+    SystemStatus_t status;
+    
+    status = initUI();
+    if (status != STATUS_OK) {
+        LOG_ERROR("MAIN", "UI initialization failed! (err=%d)", (int)status);
+        // Continue anyway - display may recover
     }
     
-    if (initLogic() != STATUS_OK) {
-        LOG_ERROR("MAIN", "Logic initialization failed!");
+    status = initLogic();
+    if (status != STATUS_OK) {
+        LOG_ERROR("MAIN", "Logic initialization failed! (err=%d)", (int)status);
+        // Critical failure - cannot operate without logic
+        while(1) {
+            delay(1000);
+        }
     }
     
     LOG_INFO("MAIN", "✅ Industrial HMI Ready. Ketik 'temp 70' untuk tes alarm.");

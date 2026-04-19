@@ -10,6 +10,7 @@
 #include <Arduino.h>
 #include <math.h>
 #include <string.h>
+#include "freertos/semphr.h"
 
 // ============================================================================
 // PRIVATE CONSTANTS
@@ -31,6 +32,7 @@ typedef struct {
     float amplitude;
     bool paused;
     unsigned long lastUpdate;
+    SemaphoreHandle_t bufferMutex;
 } GraphState_t;
 
 // ============================================================================
@@ -67,6 +69,13 @@ static float generateSignalSample(void) {
 SystemStatus_t initGraph(void) {
     LOG_INFO("GRAPH", "Initializing graph module...");
     
+    // Create mutex for buffer protection
+    s_graphState.bufferMutex = xSemaphoreCreateMutex();
+    if (s_graphState.bufferMutex == NULL) {
+        LOG_ERROR("GRAPH", "Failed to create buffer mutex");
+        return STATUS_ERROR;
+    }
+    
     // Clear signal buffer to center
     for (int i = 0; i < GRAPH_WIDTH; i++) {
         s_graphState.signalBuffer[i] = (float)GRAPH_CENTER_Y;
@@ -94,46 +103,85 @@ void updateSignal(void) {
     }
     s_graphState.lastUpdate = now;
 
-    // Shift buffer left (scrolling effect)
-    for (int i = 0; i < (GRAPH_WIDTH - 1); i++) {
-        s_graphState.signalBuffer[i] = s_graphState.signalBuffer[i + 1];
-    }
+    // Take mutex before accessing shared buffer
+    if (xSemaphoreTake(s_graphState.bufferMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+        // Shift buffer left (scrolling effect)
+        for (int i = 0; i < (GRAPH_WIDTH - 1); i++) {
+            s_graphState.signalBuffer[i] = s_graphState.signalBuffer[i + 1];
+        }
 
-    // Update phase for sine wave
-    s_graphState.phase += (2.0f * PI * s_graphState.frequency * (float)SIGNAL_UPDATE_INTERVAL_MS) / 1000.0f;
-    if (s_graphState.phase > (2.0f * PI)) {
-        s_graphState.phase -= (2.0f * PI);
-    }
+        // Update phase for sine wave
+        s_graphState.phase += (2.0f * PI * s_graphState.frequency * (float)SIGNAL_UPDATE_INTERVAL_MS) / 1000.0f;
+        if (s_graphState.phase > (2.0f * PI)) {
+            s_graphState.phase -= (2.0f * PI);
+        }
 
-    // Generate and store new sample
-    s_graphState.signalBuffer[GRAPH_WIDTH - 1] = generateSignalSample();
+        // Generate and store new sample
+        s_graphState.signalBuffer[GRAPH_WIDTH - 1] = generateSignalSample();
+        
+        // Release mutex
+        xSemaphoreGive(s_graphState.bufferMutex);
+    }
 }
 
 uint16_t getSignalY(uint8_t x) {
     if (x >= GRAPH_WIDTH) {
         return GRAPH_CENTER_Y;
     }
-    return (uint16_t)s_graphState.signalBuffer[x];
+    
+    uint16_t value = GRAPH_CENTER_Y;
+    
+    // Take mutex before reading shared buffer
+    if (xSemaphoreTake(s_graphState.bufferMutex, pdMS_TO_TICKS(5)) == pdTRUE) {
+        value = (uint16_t)s_graphState.signalBuffer[x];
+        xSemaphoreGive(s_graphState.bufferMutex);
+    }
+    
+    return value;
 }
 
 void setFrequency(float hz) {
-    s_graphState.frequency = constrain(hz, MIN_FREQUENCY, MAX_FREQUENCY);
-    LOG_INFO("GRAPH", "Frequency set to: %.1f Hz", s_graphState.frequency);
+    // Take mutex before modifying shared state
+    if (xSemaphoreTake(s_graphState.bufferMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+        s_graphState.frequency = constrain(hz, MIN_FREQUENCY, MAX_FREQUENCY);
+        LOG_INFO("GRAPH", "Frequency set to: %.1f Hz", s_graphState.frequency);
+        xSemaphoreGive(s_graphState.bufferMutex);
+    }
 }
 
 void setAmplitude(float amp) {
-    s_graphState.amplitude = constrain(amp, MIN_AMPLITUDE, MAX_AMPLITUDE);
-    LOG_INFO("GRAPH", "Amplitude set to: %.1f", s_graphState.amplitude);
+    // Take mutex before modifying shared state
+    if (xSemaphoreTake(s_graphState.bufferMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+        s_graphState.amplitude = constrain(amp, MIN_AMPLITUDE, MAX_AMPLITUDE);
+        LOG_INFO("GRAPH", "Amplitude set to: %.1f", s_graphState.amplitude);
+        xSemaphoreGive(s_graphState.bufferMutex);
+    }
 }
 
 bool togglePause(void) {
-    s_graphState.paused = !s_graphState.paused;
-    LOG_INFO("GRAPH", "Pause mode: %s", s_graphState.paused ? "ON" : "OFF");
-    return s_graphState.paused;
+    bool paused;
+    // Take mutex before modifying shared state
+    if (xSemaphoreTake(s_graphState.bufferMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+        s_graphState.paused = !s_graphState.paused;
+        paused = s_graphState.paused;
+        LOG_INFO("GRAPH", "Pause mode: %s", paused ? "ON" : "OFF");
+        xSemaphoreGive(s_graphState.bufferMutex);
+    } else {
+        paused = s_graphState.paused;
+    }
+    return paused;
 }
 
 bool isPaused(void) {
-    return s_graphState.paused;
+    bool paused;
+    // Take mutex before reading shared state
+    if (xSemaphoreTake(s_graphState.bufferMutex, pdMS_TO_TICKS(5)) == pdTRUE) {
+        paused = s_graphState.paused;
+        xSemaphoreGive(s_graphState.bufferMutex);
+    } else {
+        paused = s_graphState.paused;
+    }
+    return paused;
 }
 
 void handleGraphCommand(const char* cmd) {

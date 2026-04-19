@@ -49,19 +49,19 @@
 // ============================================================================
 // ERROR HANDLING MACROS
 // ============================================================================
-#define CHECK_NULL(ptr, msg) \
+#define CHECK_NULL(ptr, retVal) \
     do { \
         if ((ptr) == NULL) { \
-            LOG_ERROR("NULL_CHECK", msg); \
-            return pdFAIL; \
+            LOG_ERROR("NULL_CHECK", "NULL pointer detected"); \
+            return (retVal); \
         } \
     } while(0)
 
-#define CHECK_ESP_ERR(err, msg) \
+#define CHECK_ESP_ERR(err, retVal) \
     do { \
         if ((err) != ESP_OK) { \
-            LOG_ERROR("ESP_ERR", msg " (err=%d)", (int)(err)); \
-            return pdFAIL; \
+            LOG_ERROR("ESP_ERR", "ESP error: %d", (int)(err)); \
+            return (retVal); \
         } \
     } while(0)
 
