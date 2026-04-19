@@ -16,10 +16,11 @@
  */
 
 #include <Arduino.h>
+#include "HardwareSerial.h"
 #include "esp_task_wdt.h"
 
 /* Include global configuration */
-#include "config.h"
+#include "../../include/config.h"
 
 /* Local module headers */
 #include "ui_display.h"

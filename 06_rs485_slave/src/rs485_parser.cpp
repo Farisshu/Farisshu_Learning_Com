@@ -12,7 +12,7 @@
 #include "rs485_parser.h"
 
 /* Include global configuration */
-#include "config.h"
+#include "../../include/config.h"
 
 /**
  * @brief Private constants
@@ -84,6 +84,10 @@ void rs485_poll(Rs485Data_t* outData) {
         if (c >= 32 && c <= 126) {
             if (bufIdx < (RS485_BUFFER_SIZE - 1)) {
                 rxBuffer[bufIdx++] = c;
+            } else {
+                // Buffer overflow - reset to prevent lockout
+                bufIdx = 0;
+                LOG_WARN("RS485", "Buffer overflow, resetting");
             }
         }
         
@@ -96,6 +100,8 @@ void rs485_poll(Rs485Data_t* outData) {
                 if (parsePacket(rxBuffer, outData)) {
                     outData->valid = true;
                     lastValidRx = millis();
+                } else {
+                    LOG_DEBUG("RS485", "Parse failed: %s", rxBuffer);
                 }
             }
             

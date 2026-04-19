@@ -18,7 +18,7 @@
 #include <Arduino.h>
 
 /* Include global configuration */
-#include "config.h"
+#include "../../include/config.h"
 
 /* Local module header */
 #include "rs485_master.h"
