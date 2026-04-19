@@ -1,69 +1,100 @@
+/**
+ * @file ui_display.cpp
+ * @brief UI Display Implementation for RS485 Slave Node
+ * 
+ * Implements efficient TFT display rendering with static layout
+ * and dynamic value updates for sensor monitoring.
+ * 
+ * @copyright Farisshu Embedded Project
+ * @version 1.0.0
+ */
+
 #include "ui_display.h"
 
-TFT_eSPI tft = TFT_eSPI();
+/* Include global configuration */
+#include "config.h"
 
-// Layout konstan (anti hardcode di loop)
-constexpr uint16_t W = 160;
-constexpr uint16_t H = 128;
-constexpr uint8_t  MARGIN = 8;
-constexpr uint8_t  TITLE_Y = 12;
-constexpr uint8_t  TEMP_Y  = 42;
-constexpr uint8_t  PRESS_Y = 82;
-constexpr uint8_t  STATUS_Y = 114;
+/**
+ * @brief Private constants for display layout
+ */
+#define DISPLAY_WIDTH       160
+#define DISPLAY_HEIGHT      128
+#define DISPLAY_MARGIN      8
+#define TITLE_Y_POS         12
+#define TEMP_Y_POS          42
+#define PRESS_Y_POS         82
+#define STATUS_Y_POS        114
 
-void ui_init() {
-  tft.init();
-  tft.setRotation(1); // Landscape
-  tft.fillScreen(TFT_BLACK);
-  ui_drawStaticLayout();
+/**
+ * @brief Display instance
+ */
+static TFT_eSPI tft;
+
+/**
+ * @brief Initialize the display module
+ */
+void ui_init(void) {
+    tft.init();
+    tft.setRotation(1); // Landscape orientation
+    tft.fillScreen(TFT_BLACK);
+    ui_drawStaticLayout();
 }
 
-void ui_drawStaticLayout() {
-  tft.setTextColor(TFT_CYAN, TFT_BLACK);
-  tft.setTextSize(1);
-  tft.setCursor(MARGIN, TITLE_Y);
-  tft.print("RS485 MONITORING NODE");
+/**
+ * @brief Draw static layout elements (headers, labels)
+ */
+void ui_drawStaticLayout(void) {
+    /* Draw title */
+    tft.setTextColor(TFT_CYAN, TFT_BLACK);
+    tft.setTextSize(1);
+    tft.setCursor(DISPLAY_MARGIN, TITLE_Y_POS);
+    tft.print("RS485 MONITORING NODE");
 
-  tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  tft.setTextSize(1);
-  tft.setCursor(MARGIN, TEMP_Y - 14);
-  tft.print("TEMPERATURE");
+    /* Draw temperature label */
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.setTextSize(1);
+    tft.setCursor(DISPLAY_MARGIN, TEMP_Y_POS - 14);
+    tft.print("TEMPERATURE");
 
-  tft.setCursor(MARGIN, PRESS_Y - 14);
-  tft.print("PRESSURE");
+    /* Draw pressure label */
+    tft.setCursor(DISPLAY_MARGIN, PRESS_Y_POS - 14);
+    tft.print("PRESSURE");
 }
 
+/**
+ * @brief Update display with new sensor values
+ */
 void ui_update(float temp, float press, bool linkActive) {
-  // Clear area nilai saja (efisien)
-  tft.fillRect(MARGIN, TEMP_Y, 100, 24, TFT_BLACK);
-  tft.fillRect(MARGIN, PRESS_Y, 100, 24, TFT_BLACK);
-  tft.fillRect(W - 60, STATUS_Y, 55, 14, TFT_BLACK);
+    /* Clear value areas only (efficient update) */
+    tft.fillRect(DISPLAY_MARGIN, TEMP_Y_POS, 100, 24, TFT_BLACK);
+    tft.fillRect(DISPLAY_MARGIN, PRESS_Y_POS, 100, 24, TFT_BLACK);
+    tft.fillRect(DISPLAY_WIDTH - 60, STATUS_Y_POS, 55, 14, TFT_BLACK);
 
-  // Temperature
-  tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-  tft.setTextSize(2);
-  tft.setCursor(MARGIN, TEMP_Y);
-  tft.print(temp, 1);
-  tft.setTextSize(1);
-  tft.print(" C");
+    /* Draw temperature value */
+    tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+    tft.setTextSize(2);
+    tft.setCursor(DISPLAY_MARGIN, TEMP_Y_POS);
+    tft.print(temp, 1);
+    tft.setTextSize(1);
+    tft.print(" C");
 
-  // Pressure
-  tft.setTextColor(TFT_GREEN, TFT_BLACK);
-  tft.setTextSize(2);
-  tft.setCursor(MARGIN, PRESS_Y);
-  tft.print(press, 1);
-  tft.setTextSize(1);
-  tft.print(" Bar");
-
-  // Link Status
-  tft.setTextSize(1);
-  if (linkActive) {
+    /* Draw pressure value */
     tft.setTextColor(TFT_GREEN, TFT_BLACK);
-    tft.setCursor(W - 55, STATUS_Y);
-    tft.print("LINK OK");
-  } else {
-    tft.setTextColor(TFT_RED, TFT_BLACK);
-    tft.setCursor(W - 60, STATUS_Y);
-    tft.print("OFFLINE");
-  }
+    tft.setTextSize(2);
+    tft.setCursor(DISPLAY_MARGIN, PRESS_Y_POS);
+    tft.print(press, 1);
+    tft.setTextSize(1);
+    tft.print(" Bar");
+
+    /* Draw link status */
+    tft.setTextSize(1);
+    if (linkActive) {
+        tft.setTextColor(TFT_GREEN, TFT_BLACK);
+        tft.setCursor(DISPLAY_WIDTH - 55, STATUS_Y_POS);
+        tft.print("LINK OK");
+    } else {
+        tft.setTextColor(TFT_RED, TFT_BLACK);
+        tft.setCursor(DISPLAY_WIDTH - 60, STATUS_Y_POS);
+        tft.print("OFFLINE");
+    }
 }

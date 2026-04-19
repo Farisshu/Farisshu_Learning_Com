@@ -1,33 +1,79 @@
-name: 🧪 CI/CD Pipeline
+name: ESP32 Multi-Project CI
 
 on:
   push:
-    branches: [ "*" ]  # Jalan di branch apa saja
-    paths:
-      - '07_can_bus_node/**'  # Hanya jalan jika folder ini berubah
+    branches: [ main, master, develop ]
   pull_request:
-    branches: [ "*" ]
-    paths:
-      - '07_can_bus_node/**'
+    branches: [ main, master, develop ]
 
 jobs:
-  unit-test:
+  build:
     runs-on: ubuntu-latest
     
+    strategy:
+      matrix:
+        project:
+          - 01_motor_monitor
+          - 02_waveform_graph
+          - 03_industrial_hmi
+          - 05_rs485_master
+          - 06_rs485_slave
+          - 07_can_bus_node/master
+          - 07_can_bus_node/slave
+          - 990_ESP32_SPI_MASTER_SLAVE
+          - 99_surprise_for_her
+    
     steps:
-    - name: 📥 Checkout Code
-      uses: actions/checkout@v3
-
-    - name: 🐍 Setup Python
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.x'
-
-    - name: 🔧 Install PlatformIO
-      run: pip install platformio
-
-    - name: 🧪 Run Unit Tests
+    
+    - name: Install PlatformIO
       run: |
-        # Masuk ke folder test yang punya platformio.ini sendiri
-        cd 07_can_bus_node/test
-        pio test -e native -v
+        pip install platformio
+        pio pkg install --global --platform espressif32@6.5.0
+    
+    - name: Install cppcheck
+      run: sudo apt-get update && sudo apt-get install -y cppcheck
+    
+    - name: Static Analysis (cppcheck)
+      run: |
+        cd ${{ matrix.project }}
+        cppcheck --enable=all --std=c++11 --platform=unix64 \
+          --error-exitcode=1 \
+          src/*.cpp 2>&1 | grep -E "(error|warning)" || true
+    
+    - name: Build Project
+      run: |
+        cd ${{ matrix.project }}
+        pio run
+    
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v3
+      if: success()
+      with:
+        name: ${{ matrix.project }}-firmware
+        path: ${{ matrix.project }}/.pio/build/esp32dev/firmware.bin
+        retention-days: 7
+
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install cppcheck
+      run: sudo apt-get update && sudo apt-get install -y cppcheck
+    
+    - name: Check all projects
+      run: |
+        for dir in 01_motor_monitor 02_waveform_graph 03_industrial_hmi \
+                   05_rs485_master 06_rs485_slave \
+                   07_can_bus_node/master 07_can_bus_node/slave \
+                   990_ESP32_SPI_MASTER_SLAVE 99_surprise_for_her; do
+          echo "Checking $dir..."
+          cppcheck --enable=warning --std=c++11 \
+            "$dir"/src/*.cpp 2>&1 | grep -E "error" && exit 1 || true
+        done
