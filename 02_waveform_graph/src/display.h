@@ -10,6 +10,7 @@
 
 #include <TFT_eSPI.h>
 #include "config.h"
+#include "graph.h"
 
 #ifdef __cplusplus
 extern "C" {

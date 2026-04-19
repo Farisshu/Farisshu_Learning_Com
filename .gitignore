@@ -1,20 +1,15 @@
 ```
-# PlatformIO build artifacts
-.piolibdeps/
+# Build artifacts
 .platformio/
-*.pio/
-build/
+.piolibdeps/
+*.elf
+*.hex
+*.bin
+*.map
 
 # Dependencies
 lib/
-
-# IDE
-.vscode/
-.idea/
-
-# OS
-.DS_Store
-Thumbs.db
+pioasm/
 
 # Logs
 *.log
@@ -24,50 +19,29 @@ Thumbs.db
 .env.local
 *.env.*
 
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
 # Coverage
-.coverage
 coverage/
 htmlcov/
+.coverage
 
-# Python
+# Python (if present)
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .Python
 *.so
-
-# Build outputs
-dist/
-target/
-*.out
-*.exe
-*.dll
-*.so
-*.a
-*.o
-
-# Compressed files
-*.zip
-*.gz
-*.tar
-*.tgz
-*.bz2
-*.xz
-*.7z
-*.rar
-*.zst
-*.lz4
-*.lzh
-*.cab
-*.arj
-*.rpm
-*.deb
-*.Z
-*.lz
-*.lzo
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.tar.zst
+*.egg-info/
+.eggs/
 ```
