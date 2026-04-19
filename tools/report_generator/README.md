@@ -26,17 +26,29 @@ Perusahaan seperti **Horiba**, **Denso**, **Toyota**, dll sangat menghargai doku
 
 ```
 report_generator/
-├── test_report_generator.py    # Main script
-├── sample_data/
-│   └── motor_test_001.json     # Sample data test
-├── output/                      # Hasil generate
-│   ├── *_report.csv
-│   ├── *_report.pdf
-│   └── *_plot.png
-└── README.md
+├── esp32_data_logger.py        # Tool capture data dari ESP32
+├── test_report_generator.py    # Tool generate laporan
+├── QUICKSTART.md               # ⚡ Quick reference (baca ini dulu!)
+├── README.md                   # Panduan lengkap fitur & kustomisasi
+├── README_WORKFLOW.md          # Workflow detail & troubleshooting
+├── sample_data/                # Input JSON files
+│   ├── motor_test_001.json
+│   ├── waveform_test_001.json
+│   ├── hmi_response_test_001.json
+│   └── simulated_test_*.json
+└── output/                     # Generated reports
+    ├── *_report.csv
+    ├── *_report.pdf
+    └── *_plot.png
 ```
 
 ## 🚀 Cara Menggunakan
+
+### Quick Start (3 Menit)
+
+👉 **Lihat [`QUICKSTART.md`](QUICKSTART.md) untuk panduan super cepat!**
+
+Atau ikuti langkah lengkap di bawah:
 
 ### 1. Install Dependencies
 
