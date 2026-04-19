@@ -1,0 +1,22 @@
+{
+  "test_name": "Waveform Graph Display Test",
+  "device_id": "ESP32_002",
+  "operator": "Farisshu",
+  "date": "2024-04-19",
+  "duration_minutes": 5,
+  "target_rpm": 1000,
+  "tolerance_percent": 10,
+  "description": "Test waveform display refresh rate and stability",
+  "data_points": [
+    {"timestamp": "00:00:00", "rpm": 985, "voltage": 5.02, "current": 0.12, "temperature": 24.5},
+    {"timestamp": "00:00:30", "rpm": 1010, "voltage": 5.01, "current": 0.13, "temperature": 24.6},
+    {"timestamp": "00:01:00", "rpm": 995, "voltage": 5.03, "current": 0.12, "temperature": 24.7},
+    {"timestamp": "00:01:30", "rpm": 1005, "voltage": 5.00, "current": 0.13, "temperature": 24.8},
+    {"timestamp": "00:02:00", "rpm": 990, "voltage": 5.02, "current": 0.12, "temperature": 24.9},
+    {"timestamp": "00:02:30", "rpm": 1015, "voltage": 5.01, "current": 0.13, "temperature": 25.0},
+    {"timestamp": "00:03:00", "rpm": 1000, "voltage": 5.02, "current": 0.12, "temperature": 25.1},
+    {"timestamp": "00:03:30", "rpm": 998, "voltage": 5.03, "current": 0.13, "temperature": 25.2},
+    {"timestamp": "00:04:00", "rpm": 1008, "voltage": 5.01, "current": 0.12, "temperature": 25.3},
+    {"timestamp": "00:04:30", "rpm": 992, "voltage": 5.02, "current": 0.13, "temperature": 25.4}
+  ]
+}
