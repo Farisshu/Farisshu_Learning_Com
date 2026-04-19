@@ -19,16 +19,16 @@ jobs:
           - 03_industrial_hmi
           - 05_rs485_master
           - 06_rs485_slave
-          - 07_can_bus_node/master
-          - 07_can_bus_node/slave
+          - can_bus_master
+          - can_bus_slave
           - 990_ESP32_SPI_MASTER_SLAVE
           - 99_surprise_for_her
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.x'
     
@@ -39,6 +39,11 @@ jobs:
     
     - name: Install cppcheck
       run: sudo apt-get update && sudo apt-get install -y cppcheck
+    
+    - name: Setup include directory
+      run: |
+        mkdir -p ${{ matrix.project }}/include
+        cp -r include/* ${{ matrix.project }}/include/ 2>/dev/null || true
     
     - name: Static Analysis (cppcheck)
       run: |
@@ -53,7 +58,7 @@ jobs:
         pio run
     
     - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: success()
       with:
         name: ${{ matrix.project }}-firmware
@@ -63,7 +68,7 @@ jobs:
   code-quality:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     
     - name: Install cppcheck
       run: sudo apt-get update && sudo apt-get install -y cppcheck
@@ -72,7 +77,7 @@ jobs:
       run: |
         for dir in 01_motor_monitor 02_waveform_graph 03_industrial_hmi \
                    05_rs485_master 06_rs485_slave \
-                   07_can_bus_node/master 07_can_bus_node/slave \
+                   can_bus_master can_bus_slave \
                    990_ESP32_SPI_MASTER_SLAVE 99_surprise_for_her; do
           echo "Checking $dir..."
           cppcheck --enable=warning --std=c++11 \

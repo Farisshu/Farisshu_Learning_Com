@@ -12,6 +12,7 @@
  */
 
 #include <Arduino.h>
+#include "config.h"
 #include <SPI.h>
 #include <mcp_can.h>
 

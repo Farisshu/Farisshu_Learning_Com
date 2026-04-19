@@ -15,8 +15,8 @@ Kumpulan project ESP32 berbasis FreeRTOS dengan standar industri untuk embedded 
 | 3 | [03_industrial_hmi](03_industrial_hmi/) | ✅ Ready | HMI (Human Machine Interface) untuk industri | [![Build](https://img.shields.io/badge/build-passing-green)]() |
 | 4 | [05_rs485_master](05_rs485_master/) | ✅ Ready | RS485 communication master node | [![Build](https://img.shields.io/badge/build-passing-green)]() |
 | 5 | [06_rs485_slave](06_rs485_slave/) | ✅ Ready | RS485 communication slave node | [![Build](https://img.shields.io/badge/build-passing-green)]() |
-| 6 | [07_can_bus_node/master](07_can_bus_node/master/) | ✅ Ready | CAN Bus master node | [![Build](https://img.shields.io/badge/build-passing-green)]() |
-| 7 | [07_can_bus_node/slave](07_can_bus_node/slave/) | ✅ Ready | CAN Bus slave node | [![Build](https://img.shields.io/badge/build-passing-green)]() |
+| 6 | [can_bus_master](can_bus_master/) | ✅ Ready | CAN Bus master node | [![Build](https://img.shields.io/badge/build-passing-green)]() |
+| 7 | [can_bus_slave](can_bus_slave/) | ✅ Ready | CAN Bus slave node | [![Build](https://img.shields.io/badge/build-passing-green)]() |
 | 8 | [990_ESP32_SPI_MASTER_SLAVE](990_ESP32_SPI_MASTER_SLAVE/) | ✅ Ready | SPI communication master-slave | [![Build](https://img.shields.io/badge/build-passing-green)]() |
 | 9 | [99_surprise_for_her](99_surprise_for_her/) | ✅ Ready | Special project | [![Build](https://img.shields.io/badge/build-passing-green)]() |
 
