@@ -118,6 +118,49 @@ pio run --target upload
 pio device monitor
 ```
 
+## 📊 Test & Reporting Tools
+
+### Report Generator (tools/report_generator/)
+
+Tool profesional untuk **capture data dari ESP32** → **generate laporan otomatis** (CSV, PDF, Grafik).
+
+**Fitur:**
+- ✅ **Data Analysis**: Statistik otomatis (Mean, Min, Max, Std Dev)
+- ✅ **Quality Assurance**: Evaluasi Pass/Fail berdasarkan toleransi
+- ✅ **Multi-format Export**: CSV, PDF, PNG (grafik multi-plot)
+- ✅ **Automation**: Batch processing untuk multiple tests
+- ✅ **Professional Documentation**: Laporan standar industri
+
+**Quick Start:**
+```bash
+cd tools/report_generator
+
+# Install dependencies
+pip install pyserial matplotlib reportlab
+
+# Option A: Simulasi data (testing/demo)
+python esp32_data_logger.py simulate 15
+
+# Option B: Capture dari ESP32 real
+python esp32_data_logger.py record 60
+
+# Generate laporan (single atau batch)
+python test_report_generator.py --batch
+```
+
+**Output:**
+- `*_report.csv` - Data + statistik
+- `*_report.pdf` - Laporan profesional  
+- `*_plot.png` - Grafik parameter
+
+**Perfect untuk portofolio Horiba!** Menunjukkan kemampuan:
+- Data analysis & statistics
+- Professional documentation
+- Automation mindset
+- Quality assurance thinking
+
+👉 Lihat [`tools/report_generator/README.md`](tools/report_generator/README.md) untuk detail lengkap.
+
 ## 📊 Code Quality Metrics
 
 | Metric | Target | Status |

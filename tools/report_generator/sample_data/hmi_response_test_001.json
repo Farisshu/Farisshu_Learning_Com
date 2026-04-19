@@ -1,0 +1,23 @@
+{
+  "test_name": "Industrial HMI Response Time Test",
+  "device_id": "ESP32_003",
+  "operator": "Farisshu",
+  "date": "2024-04-19",
+  "duration_minutes": 10,
+  "target_rpm": 500,
+  "tolerance_percent": 15,
+  "description": "Test HMI touch response and display update latency",
+  "data_points": [
+    {"timestamp": "00:00:00", "rpm": 495, "voltage": 3.31, "current": 0.08, "temperature": 23.5},
+    {"timestamp": "00:01:00", "rpm": 510, "voltage": 3.30, "current": 0.09, "temperature": 23.7},
+    {"timestamp": "00:02:00", "rpm": 488, "voltage": 3.32, "current": 0.08, "temperature": 23.9},
+    {"timestamp": "00:03:00", "rpm": 505, "voltage": 3.29, "current": 0.09, "temperature": 24.1},
+    {"timestamp": "00:04:00", "rpm": 498, "voltage": 3.31, "current": 0.08, "temperature": 24.3},
+    {"timestamp": "00:05:00", "rpm": 502, "voltage": 3.30, "current": 0.09, "temperature": 24.5},
+    {"timestamp": "00:06:00", "rpm": 490, "voltage": 3.32, "current": 0.08, "temperature": 24.7},
+    {"timestamp": "00:07:00", "rpm": 508, "voltage": 3.29, "current": 0.09, "temperature": 24.9},
+    {"timestamp": "00:08:00", "rpm": 496, "voltage": 3.31, "current": 0.08, "temperature": 25.1},
+    {"timestamp": "00:09:00", "rpm": 504, "voltage": 3.30, "current": 0.09, "temperature": 25.3},
+    {"timestamp": "00:10:00", "rpm": 499, "voltage": 3.31, "current": 0.08, "temperature": 25.5}
+  ]
+}

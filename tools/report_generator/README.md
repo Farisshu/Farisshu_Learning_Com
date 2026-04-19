@@ -26,53 +26,82 @@ Perusahaan seperti **Horiba**, **Denso**, **Toyota**, dll sangat menghargai doku
 
 ```
 report_generator/
-├── test_report_generator.py    # Main script
-├── sample_data/
-│   └── motor_test_001.json     # Sample data test
-├── output/                      # Hasil generate
-│   ├── *_report.csv
-│   ├── *_report.pdf
-│   └── *_plot.png
-└── README.md
+├── esp32_data_logger.py        # Tool capture data dari ESP32
+├── test_report_generator.py    # Tool generate laporan
+├── QUICKSTART.md               # ⚡ Quick reference (baca ini dulu!)
+├── README.md                   # Panduan lengkap fitur & kustomisasi
+├── README_WORKFLOW.md          # Workflow detail & troubleshooting
+├── sample_data/                # Input JSON files
+│   ├── motor_test_001.json
+│   ├── waveform_test_001.json
+│   ├── hmi_response_test_001.json
+│   └── simulated_test_*.json
+└── output/                     # Generated reports
+    ├── *_report.csv
+    ├── *_report.pdf
+    └── *_plot.png
 ```
 
 ## 🚀 Cara Menggunakan
 
+### Quick Start (3 Menit)
+
+👉 **Lihat [`QUICKSTART.md`](QUICKSTART.md) untuk panduan super cepat!**
+
+Atau ikuti langkah lengkap di bawah:
+
 ### 1. Install Dependencies
 
 ```bash
-pip install matplotlib reportlab
+pip install pyserial matplotlib reportlab
 ```
 
-### 2. Siapkan Data Test (JSON)
+### 2. Pilih Workflow
 
-Format JSON:
+#### Option A: Capture Data dari ESP32 (Real Hardware)
 
-```json
-{
-  "test_name": "Motor RPM Stability Test",
-  "device_id": "ESP32_001",
-  "operator": "Farisshu",
-  "date": "2024-04-19",
-  "target_rpm": 1500,
-  "tolerance_percent": 5,
-  "data_points": [
-    {"timestamp": "00:00:00", "rpm": 1502, "voltage": 12.1, "current": 0.45, "temperature": 25.3},
-    {"timestamp": "00:01:00", "rpm": 1498, "voltage": 12.0, "current": 0.46, "temperature": 25.5}
-  ]
-}
+```bash
+# Lihat COM ports tersedia
+python esp32_data_logger.py list
+
+# Record data (auto-detect port)
+python esp32_data_logger.py record
+
+# Record dengan durasi 60 detik
+python esp32_data_logger.py record 60
+
+# Interactive mode
+python esp32_data_logger.py
 ```
+
+#### Option B: Simulasi Data (Testing/Demo)
+
+```bash
+# Generate 15 data points simulasi
+python esp32_data_logger.py simulate 15
+
+# Interactive mode
+python esp32_data_logger.py
+# Pilih menu [1] Simulate data
+```
+
+Output: `sample_data/simulated_test_YYYYMMDD_HHMMSS.json`
 
 ### 3. Generate Laporan
 
-**Gunakan sample data:**
+**Single file:**
 ```bash
-python test_report_generator.py
+python test_report_generator.py sample_data/motor_test_001.json
 ```
 
-**Gunakan file custom:**
+**Batch mode (process semua JSON):**
 ```bash
-python test_report_generator.py path/to/your_test.json
+python test_report_generator.py --batch
+```
+
+**Default (gunakan sample data):**
+```bash
+python test_report_generator.py
 ```
 
 ### 4. Lihat Hasil
@@ -126,13 +155,33 @@ stats['new_metric'] = {
 
 4. Tambahkan plot di `generate_plots()` jika perlu.
 
-## 💡 Tips untuk Portofolio
+## 💡 Tips untuk Portofolio Horiba
 
-1. **Dokumentasikan Proses Test**: Jelaskan setup hardware, kondisi lingkungan, durasi test
-2. **Visualisasikan Data**: Grafik membantu recruiter memahami hasil test dengan cepat
-3. **Highlight Pass/Fail Criteria**: Tunjukkan bahwa kamu paham spesifikasi teknis
-4. **Bandingkan Varian**: Test dengan parameter berbeda (misal: RPM 1000 vs 2000)
-5. **Integrasikan dengan Proyek Lain**: Gunakan tool ini untuk project ESP32 kamu
+### 1. Highlight Data Analysis Skills
+- Tunjukkan pemahaman statistik (mean, std dev, tolerance)
+- Jelaskan kriteria pass/fail yang digunakan
+- Bandingkan multiple test conditions
+
+### 2. Professional Documentation
+- Sertakan PDF report di portfolio
+- Jelaskan setup test (hardware, kondisi, durasi)
+- Visualisasikan data dengan grafik
+
+### 3. Show Automation Mindset
+- Demonstrasikan batch processing capability
+- Jelaskan workflow yang efficient dan repeatable
+- Tunjukkan integrasi antara tools
+
+### 4. Quality Assurance Thinking
+- Definisikan acceptance criteria yang jelas
+- Documentasikan test procedures
+- Track variations dan anomalies
+
+### 5. Best Practices
+- **Konsistensi Naming**: `{project_name}_test_{version}.json`
+- **Document Test Conditions**: Catat environmental conditions, hardware setup
+- **Version Control**: Commit JSON files + reports ke Git
+- **Regular Testing**: Run tests berkala untuk track degradation
 
 ## 📝 License
 

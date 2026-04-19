@@ -378,8 +378,31 @@ class TestReportGenerator:
 def main():
     """Main function untuk demo"""
     import sys
+    from pathlib import Path
     
-    # Default: gunakan sample data
+    # Check for batch mode
+    if len(sys.argv) > 1 and sys.argv[1].lower() == '--batch':
+        # Batch mode: process all JSON files in sample_data folder
+        sample_dir = Path(__file__).parent / "sample_data"
+        json_files = list(sample_dir.glob("*.json"))
+        
+        if not json_files:
+            print("❌ No JSON files found in sample_data/")
+            sys.exit(1)
+        
+        print(f"📦 BATCH MODE: Processing {len(json_files)} files...\n")
+        
+        for json_file in json_files:
+            print("=" * 60)
+            generator = TestReportGenerator(str(json_file))
+            generator.generate_full_report()
+            print()
+        
+        print("\n" + "=" * 60)
+        print(f"✅ Batch processing complete! Processed {len(json_files)} files.")
+        return
+    
+    # Single file mode
     if len(sys.argv) < 2:
         sample_data_path = Path(__file__).parent / "sample_data" / "motor_test_001.json"
         print(f"📝 Using sample data: {sample_data_path}")
