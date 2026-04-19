@@ -1,3 +1,40 @@
-.pio/
-.vscode/
+```
+# Build artifacts and outputs
+tools/report_generator/output/
+
+# Dependencies and caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Logs and temporary files
 *.log
+*.tmp
+*.swp
+
+# Environment files
+.env
+.env.local
+*.env.*
+
+# Editors and IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
+
+# Distribution artifacts
+dist/
+build/
+*.egg-info/
+```
