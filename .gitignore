@@ -1,1 +1,38 @@
-FIX_CHECKPOINT.md
+```
+# Build artifacts
+*.o
+*.obj
+*.a
+*.so
+*.dll
+*.exe
+*.out
+
+# PlatformIO specific
+.platformio/
+.piolibdeps/
+*.elf
+*.hex
+*.bin
+*.map
+
+# Dependencies
+lib/
+
+# Temp files
+*.tmp
+*.swp
+*~
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+```

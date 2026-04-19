@@ -12,7 +12,10 @@
 #include "rs485_parser.h"
 
 /* Include global configuration */
-#include "../../include/config.h"
+#include "config.h"
+
+/* HardwareSerial include for ESP32 */
+#include <HardwareSerial.h>
 
 /**
  * @brief Private constants
@@ -29,6 +32,7 @@ static HardwareSerial RS485(RS485_UART_NUM);
 static char rxBuffer[RS485_BUFFER_SIZE];
 static uint8_t bufIdx = 0;
 static unsigned long lastValidRx = 0;
+static portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
 
 /**
  * @brief Validate and parse incoming packet
@@ -99,7 +103,10 @@ void rs485_poll(Rs485Data_t* outData) {
             if (bufIdx > PROTOCOL_HEADER_LEN) {
                 if (parsePacket(rxBuffer, outData)) {
                     outData->valid = true;
+                    /* Atomic write to lastValidRx */
+                    portENTER_CRITICAL_SAFE(&mux);
                     lastValidRx = millis();
+                    portEXIT_CRITICAL_SAFE(&mux);
                 } else {
                     LOG_DEBUG("RS485", "Parse failed: %s", rxBuffer);
                 }
@@ -115,5 +122,10 @@ void rs485_poll(Rs485Data_t* outData) {
  * @brief Check if RS485 link is alive
  */
 bool rs485_isLinkAlive(uint32_t timeoutMs) {
-    return (millis() - lastValidRx < timeoutMs);
+    /* Atomic read of lastValidRx */
+    portENTER_CRITICAL_SAFE(&mux);
+    unsigned long lastRx = lastValidRx;
+    portEXIT_CRITICAL_SAFE(&mux);
+    
+    return (millis() - lastRx < timeoutMs);
 }

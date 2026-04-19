@@ -11,7 +11,7 @@
 #include "logic.h"
 
 /* Include global configuration */
-#include "../../include/config.h"
+#include "config.h"
 
 // ============================================================================
 // PRIVATE CONSTANTS
@@ -47,10 +47,12 @@ void setup(void) {
     // Initialize modules with error handling
     SystemStatus_t status;
     
-    status = initUI();
-    if (status != STATUS_OK) {
+    if (initUI() != STATUS_OK) {
         LOG_ERROR("MAIN", "UI initialization failed! (err=%d)", (int)status);
-        // Continue anyway - display may recover
+        // Critical failure - cannot operate without UI
+        while(1) {
+            delay(1000);
+        }
     }
     
     status = initLogic();
@@ -115,6 +117,10 @@ static void processSerialCommand(void) {
         } else {
             if (serialIdx < (SERIAL_BUFFER_SIZE - 1)) {
                 serialBuffer[serialIdx++] = c;
+            } else {
+                // Buffer full - reset to prevent overflow
+                LOG_WARN("MAIN", "Serial buffer overflow, resetting");
+                serialIdx = 0;
             }
         }
     }

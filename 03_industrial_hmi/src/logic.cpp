@@ -7,7 +7,7 @@
 
 #include "logic.h"
 #include <Arduino.h>
-#include "../../include/config.h"
+#include "config.h"
 
 // ============================================================================
 // PRIVATE CONSTANTS
