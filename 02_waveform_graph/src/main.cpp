@@ -71,7 +71,7 @@ static void vDisplayTask(void *pvParameters) {
         ledState = !ledState;
         digitalWrite(LED_PIN, ledState ? HIGH : LOW);
         
-        TASK_DELAY_UNTIL(xLastWakeTime);
+        TASK_DELAY_UNTIL(xLastWakeTime, DISPLAY_UPDATE_INTERVAL_MS);
     }
 }
 

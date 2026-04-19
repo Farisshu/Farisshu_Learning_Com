@@ -69,7 +69,7 @@
 // FREERTOS UTILITIES
 // ============================================================================
 #define TASK_DELAY_MS(ms)       vTaskDelay(pdMS_TO_TICKS(ms))
-#define TASK_DELAY_UNTIL(tick)  vTaskDelayUntil(&(tick), pdMS_TO_TICKS(ms))
+#define TASK_DELAY_UNTIL(tick, delay_ms)  vTaskDelayUntil(&(tick), pdMS_TO_TICKS(delay_ms))
 
 // Stack size definitions (in words, typically 4 bytes per word on ESP32)
 #define STACK_SMALL     1024
