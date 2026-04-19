@@ -35,14 +35,14 @@
 // ============================================================================
 #ifdef DEBUG
     #define LOG_TAG             "[APP]"
-    #define LOG_ERROR(tag, fmt, ...)    Serial.printf("%s [E] " tag ": " fmt "\n", __func__, ##__VA_ARGS__)
-    #define LOG_WARN(tag, fmt, ...)     Serial.printf("%s [W] " tag ": " fmt "\n", __func__, ##__VA_ARGS__)
-    #define LOG_INFO(tag, fmt, ...)     Serial.printf("%s [I] " tag ": " fmt "\n", __func__, ##__VA_ARGS__)
-    #define LOG_DEBUG(tag, fmt, ...)    Serial.printf("%s [D] " tag ": " fmt "\n", __func__, ##__VA_ARGS__)
+    #define LOG_ERROR(tag, fmt, ...)    Serial.printf("%s [E] %s: " fmt "\n", __func__, tag, ##__VA_ARGS__)
+    #define LOG_WARN(tag, fmt, ...)     Serial.printf("%s [W] %s: " fmt "\n", __func__, tag, ##__VA_ARGS__)
+    #define LOG_INFO(tag, fmt, ...)     Serial.printf("%s [I] %s: " fmt "\n", __func__, tag, ##__VA_ARGS__)
+    #define LOG_DEBUG(tag, fmt, ...)    Serial.printf("%s [D] %s: " fmt "\n", __func__, tag, ##__VA_ARGS__)
 #else
-    #define LOG_ERROR(tag, fmt, ...)    Serial.printf("[E] " tag ": " fmt "\n", ##__VA_ARGS__)
+    #define LOG_ERROR(tag, fmt, ...)    Serial.printf("[E] %s: " fmt "\n", tag, ##__VA_ARGS__)
     #define LOG_WARN(tag, fmt, ...)     // Disabled in release
-    #define LOG_INFO(tag, fmt, ...)     Serial.printf("[I] " tag ": " fmt "\n", ##__VA_ARGS__)
+    #define LOG_INFO(tag, fmt, ...)     Serial.printf("[I] %s: " fmt "\n", tag, ##__VA_ARGS__)
     #define LOG_DEBUG(tag, fmt, ...)    // Disabled in release
 #endif
 

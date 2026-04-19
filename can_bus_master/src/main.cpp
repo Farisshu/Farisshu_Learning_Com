@@ -83,16 +83,16 @@ void loop() {
         const uint16_t tempRaw = (uint16_t)(simTemp * 10.0f);
         
         const uint8_t txData[8] = {
-            (rpmRaw >> 8) & 0xFF,
-            rpmRaw & 0xFF,
-            (tempRaw >> 8) & 0xFF,
-            tempRaw & 0xFF,
+            static_cast<uint8_t>((rpmRaw >> 8) & 0xFF),
+            static_cast<uint8_t>(rpmRaw & 0xFF),
+            static_cast<uint8_t>((tempRaw >> 8) & 0xFF),
+            static_cast<uint8_t>(tempRaw & 0xFF),
             simStatus,
             0x00, 0x00, 0x00                  /**< Reserved bytes */
         };
 
         /* Transmit CAN message */
-        if (CAN.sendMsgBuf(CAN_MSG_ID, 0, 8, txData) == CAN_OK) {
+        if (CAN.sendMsgBuf(CAN_MSG_ID, 0, 8, const_cast<uint8_t*>(txData)) == CAN_OK) {
             Serial.printf("[TX] ✅ ID:0x%03lX | RPM:%6.0f | TEMP:%6.1f°C | ST:0x%02X\n", 
                           CAN_MSG_ID, simRpm, simTemp, simStatus);
         } else {
