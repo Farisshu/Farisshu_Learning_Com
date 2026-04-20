@@ -1,27 +1,24 @@
 ```
 # PlatformIO build artifacts
-.piolibdeps/
 .platformio/
+.piolibdeps/
+*.pio*
+.sconsign.dblite
+.pioenvs/
+.piolibdeps/
 
-# Compiled files
-*.o
-*.obj
+# Build outputs
+build/
+dist/
 *.elf
 *.bin
 *.hex
-*.out
-
-# Build directories
-build/
-.dist/
-.libdeps/
+*.map
+*.lst
 
 # Dependencies
-node_modules/
-venv/
-.venv/
-__pycache__/
-*.egg-info/
+lib/
+deps/
 
 # Logs and temp files
 *.log
@@ -31,16 +28,13 @@ __pycache__/
 # Environment
 .env
 .env.local
-*.env.*
+.env.*
 
 # Editors
 .vscode/
 .idea/
-
-# Coverage
-.coverage
-coverage/
-htmlcov/
+*.swp
+*.swo
 
 # OS
 .DS_Store
