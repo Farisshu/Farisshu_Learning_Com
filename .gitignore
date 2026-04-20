@@ -1,20 +1,32 @@
 ```
-# Compiled and build artifacts
+# PlatformIO build artifacts
+.piolibdeps/
+.platformio/
+
+# Compiled files
 *.o
 *.obj
+*.elf
+*.bin
+*.hex
 *.out
-*.a
-*.so
-*.dll
-*.exe
+
+# Build directories
+build/
+.dist/
+.libdeps/
 
 # Dependencies
-build/
-dist/
+node_modules/
+venv/
+.venv/
+__pycache__/
+*.egg-info/
 
 # Logs and temp files
 *.log
 *.tmp
+*.swp
 
 # Environment
 .env
@@ -24,35 +36,13 @@ dist/
 # Editors
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# Coverage reports
+# Coverage
+.coverage
 coverage/
 htmlcov/
-*.coverage
 
-# Compression files
-*.zip
-*.gz
-*.tar
-*.tgz
-*.bz2
-*.xz
-*.7z
-*.rar
-*.zst
-*.lz4
-*.lzh
-*.cab
-*.arj
-*.rpm
-*.deb
-*.Z
-*.lz
-*.lzo
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.tar.zst
+# OS
+.DS_Store
+Thumbs.db
 ```
