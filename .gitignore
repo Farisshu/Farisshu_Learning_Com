@@ -1,1 +1,48 @@
-FIX_CHECKPOINT.md
+```
+# PlatformIO build artifacts
+.piolibdeps/
+.platformio/
+
+# Compiled files
+*.o
+*.obj
+*.elf
+*.bin
+*.hex
+*.out
+
+# Build directories
+build/
+.dist/
+.libdeps/
+
+# Dependencies
+node_modules/
+venv/
+.venv/
+__pycache__/
+*.egg-info/
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Editors
+.vscode/
+.idea/
+
+# Coverage
+.coverage
+coverage/
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
+```

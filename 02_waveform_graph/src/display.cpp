@@ -9,6 +9,14 @@
 #include <Arduino.h>
 
 // ============================================================================
+// PRIVATE CONSTANTS
+// ============================================================================
+#define WAVEFORM_TEXT_X     30
+#define WAVEFORM_TEXT_Y     50
+#define GRAPH_TEXT_X        45
+#define GRAPH_TEXT_Y        75
+
+// ============================================================================
 // PRIVATE VARIABLES
 // ============================================================================
 static TFT_eSPI tft;  // Display instance
@@ -26,9 +34,9 @@ SystemStatus_t initDisplay(void) {
 
     tft.setTextColor(TFT_GREEN, TFT_BLACK);
     tft.setTextSize(2);
-    tft.setCursor(30, 50);
+    tft.setCursor(WAVEFORM_TEXT_X, WAVEFORM_TEXT_Y);
     tft.print("WAVEFORM");
-    tft.setCursor(45, 75);
+    tft.setCursor(GRAPH_TEXT_X, GRAPH_TEXT_Y);
     tft.print("GRAPH");
     
     TASK_DELAY_MS(1000);

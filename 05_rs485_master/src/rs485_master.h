@@ -10,6 +10,7 @@
 #define RS485_MASTER_H
 
 #include <Arduino.h>
+#include "../../include/config.h"
 
 #ifdef __cplusplus
 extern "C" {
